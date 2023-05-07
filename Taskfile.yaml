@@ -1,0 +1,63 @@
+version: '3'
+
+tasks:
+  build:
+    desc: "build the compiled binary"
+    cmds:
+      - go build -o app main.go
+
+  test:
+    desc: "run all unit tests"
+    cmds:
+      - go test -v ./...
+
+  lint:
+    desc: "lint the code"
+    cmds:
+      - golangci-lint run
+
+  fmt:
+    desc: "format the code"
+    cmds:
+      - go fmt ./...
+
+  imports:
+    desc: "fix the imports"
+    cmds:
+      - goimports-reviser ./...        
+
+  run:
+    desc: "runs our app and any dependencies defined within the docker-compose.yaml"
+    cmds:
+      - docker compose up --build -d
+
+  logs:
+    desc: "shows the logs for our app"
+    cmds:
+      - docker compose logs -f app    
+
+  integration-test:
+    desc: "starts our app and then attempts to run our integration tests"
+    cmds:
+      - docker compose up --build -d
+      - go test -tags=integration -v ./...
+
+  db-migration-up:
+    desc: "runs the up migration"
+    cmds:
+      - migrate -path db/migration -database "postgres://demouser:demopass@localhost:5432/demodb?sslmode=disable" -v up
+
+  db-migration-down:
+    desc: "runs the down migration"
+    cmds:
+      - migrate -path db/migration -database "postgres://demouser:demopass@localhost:5432/demodb?sslmode=disable" -v down    
+
+  db-migration-create:
+    desc: "creates a new migration"
+    cmds:
+      - migrate create -ext sql -dir db/migration -seq  {{.CLI_ARGS}}
+
+  sqlc-gen:
+    desc: "generates go code"
+    cmds:
+      - sqlc generate  
